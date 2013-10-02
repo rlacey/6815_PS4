@@ -77,6 +77,18 @@ def testEdgeBasedGreenDemosaic(raw, outputname, gos =1, rosy=1,rosx=1,bosy=0,bos
    rout = a4.edgeBasedGreenDemosaic(raw, gos, rosy, rosx, bosy, bosx)
    io.imwrite(rout, outputname+'_edgeBasedGreenDemosaic.png')
 
+def testImprovedDemosaic(raw, outputname, gos =1, rosy=1,rosx=1,bosy=0,bosx=0):
+    rout = a4.improvedDemosaic(raw, gos, rosy, rosx, bosy, bosx)
+    io.imwrite(rout, outputname+'_improvedDemosaic.png')
+
+def testSergei():
+    sergeis, sergeiNames = getRawPNGsInDir("data/Sergei/")
+    scount = 0
+    for f in sergeis:
+        io.imwrite(a4.sergeiRGB(f), str('Sergei'+'%03d'%(scount))+'.png')
+        scount = scount +1
+
+    
 
 
 #testDenoise(getPNGsInDir('data/aligned-ISO400/'), 'ISO400-denoise')
@@ -86,22 +98,13 @@ def testEdgeBasedGreenDemosaic(raw, outputname, gos =1, rosy=1,rosx=1,bosy=0,bos
 #testAlign()
 #testAlignAndDenoise(getPNGsInDir("data/green/"), 'green-aligned-full')
 #testBasicGreenz(io.imreadGrey("data/raw/signs-small.png"), 'demo')
-testBasicDemosaic(io.imreadGrey("data/raw/signs-small.png"), 'card', gos =1, rosy=1,rosx=1,bosy=0,bosx=0)
-testEdgeBasedGreenDemosaic(io.imreadGrey("data/raw/signs-small.png"), 'sign', gos =1, rosy=1,rosx=1,bosy=0,bosx=0)
+##testBasicDemosaic(io.imreadGrey("data/raw/signs-small.png"), 'sign-small', gos =0, rosy=1,rosx=1,bosy=0,bosx=0)
+##testEdgeBasedGreenDemosaic(io.imreadGrey("data/raw/signs-small.png"), 'sign-small', gos =0, rosy=1,rosx=1,bosy=0,bosx=0)
+##testImprovedDemosaic(io.imreadGrey("data/raw/signs-small.png"), 'sign-small2', gos =0, rosy=1,rosx=1,bosy=0,bosx=0)
+print 'start'
+testSergei()
+print 'end'
 
-
-##def testImprovedDemosaic(raw, outputname, gos =1, rosy=1,rosx=1,bosy=0,bosx=0):
-##    rout = a4.improvedDemosaic(raw, gos, rosy, rosx, bosy, bosx)
-##    io.imwrite(rout, outputname+'_improvedDemosaic.png')
-##
-##def testSergei():
-##    sergeis, sergeiNames = getRawPNGsInDir("SergeiThird/")
-##    scount = 0
-##    for f in sergeis:
-##        io.imwrite(a4.creatergb(f), str('Sergei'+'%03d'%(scount))+'.png')
-##        scount = scount +1
-##
-##
 ###Input data:
 ###
 ###Archive_2 = getPNGsInDir("Archive_2/")

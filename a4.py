@@ -6,6 +6,7 @@
 
 import numpy as np
 import imageIO as io
+from math import floor
 
 ############ HELPER FUNCTIONS############
 def imIter(im):
@@ -68,13 +69,13 @@ def alignAndDenoise(imageList, maxOffset=20):
         alignedImgs.append(np.roll(np.roll(img, offsetY, axis=0), offsetX, axis=1))
     return denoiseSeq(alignedImgs)
 
-def basicGreen(raw, offset=1):
+def basicGreen(raw, offset=0):
    '''takes a raw image and an offset. Returns the interpolated green channel of your image using the basic technique.'''
    (height, width) = np.shape(raw)
    out = raw.copy()
    for y in range(1, height-1):
        for x in range(1, width-1):
-           if ((y+x+offset)% 2 == 1):
+           if ((y+x+offset)% 2 == 0):
                out[y,x] = 0.25 * (raw[y-1, x] + raw[y+1, x] + raw[y, x-1] + raw[y, x+1])
    return out
 
@@ -107,7 +108,7 @@ def edgeBasedGreen(raw, offset=1):
     out = raw.copy()
     for y in range(1, height-1):
         for x in range(1, width-1):
-            if ((y+x+offset)% 2 == 1):
+            if ((y+x+offset)% 2 == 0):
                 verticalDiff = abs(raw[y-1,x] - raw[y+1,x])
                 horizontalDiff = abs(raw[y,x-1] - raw[y,x+1])
                 if verticalDiff > horizontalDiff:
@@ -128,14 +129,75 @@ def edgeBasedGreenDemosaic(raw, offsetGreen=0, offsetRedY=1, offsetRedX=1, offse
 
 def greenBasedRorB(raw, green, offsetY, offsetX):
     '''Same as basicRorB but also takes an interpolated green channel and uses this channel to implement the green based technique.'''
-    #out =raw.copy()
+    out = raw.copy()
+    for y,x in imIter(raw):
+        if ((x+offsetX)%2 ==1 and (y+offsetY)%2==1):
+            out[y,x] = max(0, raw[y,x] - green[y,x])
+    return basicRorB(out, offsetY, offsetX)
+    
 
 def improvedDemosaic(raw, offsetGreen=0, offsetRedY=1, offsetRedX=1, offsetBlueY=0, offsetBlueX=0):
     '''Same as basicDemosaic but uses edgeBasedGreen and greenBasedRorB.'''
+    (height, width) = np.shape(raw)
+    out = np.zeros([height, width, 3])
+    green = edgeBasedGreen(raw, offsetGreen)
+    out[:,:,0] = greenBasedRorB(raw, green, offsetRedY, offsetRedX)
+    out[:,:,1] = green
+    out[:,:,2] = greenBasedRorB(raw, green, offsetBlueY, offsetBlueX)
+    return out    
 
 
 def split(raw):
     '''splits one of Sergei's images into a 3-channel image with height that is floor(height_of_raw/3.0). Returns the 3-channel image.'''
-
+    (height_of_raw, width) = np.shape(raw)
+    height = floor(height_of_raw/3.0)    
+    red = raw[:height]
+    green = raw[height:2*height]
+    blue = raw[2*height:3*height]
+    out = np.zeros([height, width, 3])
+    out[:,:,0] = red
+    out[:,:,1] = green
+    out[:,:,2] = blue
+    return out
+    
 def sergeiRGB(raw, alignTo=1):
     '''Splits the raw image, then aligns two of the channels to the third. Returns the aligned color image.'''
+    rgb = split(raw)
+    (height, width) = np.shape(rgb)
+    r = np.zeros([height, width, 3])
+    g = np.zeros([height, width, 3])
+    b = np.zeros([height, width, 3])
+    r[:,:] = rgb[:,:,0]
+    g[:,:] = rgb[:,:,1]
+    b[:,:] = rgb[:,:,2]
+    one = align(b, r)
+    return align(one, g)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
