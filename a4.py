@@ -74,7 +74,7 @@ def basicGreen(raw, offset=1):
    out = raw.copy()
    for y in range(1, height-1):
        for x in range(1, width-1):
-           if (y + x + offset) % 2 == 1:
+           if ((y+x+offset)% 2 == 1):
                out[y,x] = 0.25 * (raw[y-1, x] + raw[y+1, x] + raw[y, x-1] + raw[y, x+1])
    return out
 
@@ -85,11 +85,11 @@ def basicRorB(raw, offsetY, offsetX):
    for y in range(1, height-1):
        for x in range(1, width-1):
         if((y-offsetY)%2==1 and (x-offsetX)%2==1):
-            out[y,x] = 0.25 * (raw[y-1,x-1] + raw[y+1,x-1] + raw[y+1,x+1] + raw[y-1,x+1])
-        elif((y-offsetY)%2==0 and (x-offsetX)%2==1):
-            out[y,x] = 0.5 * (raw[y,x-1] + raw[y,x+1])
+            out[y,x] = 0.25 * (raw[y-1,x-1] + raw[y-1,x+1] + raw[y+1,x-1] + raw[y+1,x+1])
         elif((y-offsetY)%2==1 and (x-offsetX)%2==0):
             out[y,x] = 0.5 * (raw[y-1,x] + raw[y+1,x])
+        elif((y-offsetY)%2==0 and (x-offsetX)%2==1):
+            out[y,x] = 0.5 * (raw[y,x-1] + raw[y,x+1])
    return out
 
 def basicDemosaic(raw, offsetGreen=0, offsetRedY=1, offsetRedX=1, offsetBlueY=0, offsetBlueX=0):
@@ -101,13 +101,29 @@ def basicDemosaic(raw, offsetGreen=0, offsetRedY=1, offsetRedX=1, offsetBlueY=0,
    out[:,:,2] = basicRorB(raw, offsetBlueY, offsetBlueX)
    return out
 
+def edgeBasedGreen(raw, offset=1):
+    '''same as basicGreen, but uses the edge based technique.'''
+    (height, width) = np.shape(raw)
+    out = raw.copy()
+    for y in range(1, height-1):
+        for x in range(1, width-1):
+            if ((y+x+offset)% 2 == 1):
+                verticalDiff = abs(raw[y-1,x] - raw[y+1,x])
+                horizontalDiff = abs(raw[y,x-1] - raw[y,x+1])
+                if verticalDiff > horizontalDiff:
+                    out[y,x] = 0.5 * (raw[y, x-1] + raw[y, x+1])
+                else:
+                    out[y,x] = 0.5 * (raw[y-1, x] + raw[y+1, x])
+    return out
 
 def edgeBasedGreenDemosaic(raw, offsetGreen=0, offsetRedY=1, offsetRedX=1, offsetBlueY=0, offsetBlueX=0):
     '''same as basicDemosaic except it uses the edge based technique to produce the green channel.'''
-
-def edgeBasedGreen(raw, offset=1):
-    '''same as basicGreen, but uses the edge based technique.'''
-    #out =raw.copy()
+    (height, width) = np.shape(raw)
+    out = np.zeros([height, width, 3])
+    out[:,:,0] = basicRorB(raw, offsetRedY, offsetRedX)
+    out[:,:,1] = edgeBasedGreen(raw, offsetGreen)
+    out[:,:,2] = basicRorB(raw, offsetBlueY, offsetBlueX)
+    return out
 
 
 def greenBasedRorB(raw, green, offsetY, offsetX):

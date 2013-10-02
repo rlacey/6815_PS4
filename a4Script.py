@@ -58,38 +58,41 @@ def testAlign():
     yalign2, xalign2 = a4.align(align2, align1)
     print "alignment 1->2 is:"+'[{},{}]'.format(yalign, xalign)
     print "alignment 2->1 is:"+'[{},{}]'.format(yalign2, xalign2)
-    
+
 
 def testAlignAndDenoise(imageList, outputname):
     imADN = a4.alignAndDenoise(imageList)
     io.imwrite(imADN, str(outputname+'_ADN_x%03d'%(len(imageList)))+".png")
-    
+
 def testBasicGreenz(raw, outputname, offset=1):
     rout = a4.basicGreen(raw, offset)
     io.imwrite(rout, outputname+'_basicGreen.png')
 
-    
+
 def testBasicDemosaic(raw, outputname, gos =1, rosy=1,rosx=1,bosy=0,bosx=0):
     rout = a4.basicDemosaic(raw, gos, rosy, rosx, bosy, bosx)
-    io.imwrite(rout, outputname+'_basicDemosaic.png') 
+    io.imwrite(rout, outputname+'_basicDemosaic.png')
+
+def testEdgeBasedGreenDemosaic(raw, outputname, gos =1, rosy=1,rosx=1,bosy=0,bosx=0):
+   rout = a4.edgeBasedGreenDemosaic(raw, gos, rosy, rosx, bosy, bosx)
+   io.imwrite(rout, outputname+'_edgeBasedGreenDemosaic.png')
 
 
-##testDenoise(getPNGsInDir('data/aligned-ISO400/'), 'ISO400-denoise')
-##testDenoise(getPNGsInDir('data/aligned-ISO3200/'), 'ISO3200-denoise')
-##testSNR(getPNGsInDir('data/aligned-ISO400/'), 'ISO400-SNR')
-##testSNR(getPNGsInDir('data/aligned-ISO3200/'), 'ISO3200-SNR')
-##testAlign()
-##testAlignAndDenoise(getPNGsInDir("data/green/"), 'green-aligned-full')
-##testBasicGreenz(io.imreadGrey("data/raw/signs-small.png"), 'demo')
-testBasicDemosaic(io.imreadGrey("data/raw/signs-small.png"), 'demo', gos =1, rosy=1,rosx=1,bosy=0,bosx=0)
 
-##def testEdgeBasedGreenDemosaic(raw, outputname, gos =1, rosy=1,rosx=1,bosy=0,bosx=0):
-##    rout = a4.edgeBasedGreenDemosaic(raw, gos, rosy, rosx, bosy, bosx)
-##    io.imwrite(rout, outputname+'_edgeBasedGreenDemosaic.png') 
-##
+#testDenoise(getPNGsInDir('data/aligned-ISO400/'), 'ISO400-denoise')
+#testDenoise(getPNGsInDir('data/aligned-ISO3200/'), 'ISO3200-denoise')
+#testSNR(getPNGsInDir('data/aligned-ISO400/'), 'ISO400-SNR')
+#testSNR(getPNGsInDir('data/aligned-ISO3200/'), 'ISO3200-SNR')
+#testAlign()
+#testAlignAndDenoise(getPNGsInDir("data/green/"), 'green-aligned-full')
+#testBasicGreenz(io.imreadGrey("data/raw/signs-small.png"), 'demo')
+testBasicDemosaic(io.imreadGrey("data/raw/signs-small.png"), 'card', gos =1, rosy=1,rosx=1,bosy=0,bosx=0)
+testEdgeBasedGreenDemosaic(io.imreadGrey("data/raw/signs-small.png"), 'sign', gos =1, rosy=1,rosx=1,bosy=0,bosx=0)
+
+
 ##def testImprovedDemosaic(raw, outputname, gos =1, rosy=1,rosx=1,bosy=0,bosx=0):
 ##    rout = a4.improvedDemosaic(raw, gos, rosy, rosx, bosy, bosx)
-##    io.imwrite(rout, outputname+'_improvedDemosaic.png') 
+##    io.imwrite(rout, outputname+'_improvedDemosaic.png')
 ##
 ##def testSergei():
 ##    sergeis, sergeiNames = getRawPNGsInDir("SergeiThird/")
