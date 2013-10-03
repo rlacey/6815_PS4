@@ -49,11 +49,10 @@ def align(im1, im2, maxOffset=20):
     '''takes two images and a maxOffset. Returns the y, x offset that best aligns im2 to im1.'''
     minimumDifference = max(np.sum(im1)**2, np.sum(im2)**2)
     bestY = bestX = 0
-    for y in range(maxOffset+1):
-        imRoll = np.roll(im2, y, axis=0)
-        for x in range(maxOffset+1):
-            imRoll = np.roll(imRoll, 1, axis=1)
-            imDiffSq = np.sum((im1[maxOffset:-maxOffset] - imRoll[maxOffset:-maxOffset])**2)
+    for y in range(-maxOffset, maxOffset):
+        for x in range(-maxOffset, maxOffset):
+            imRoll = np.roll(np.roll(im2, x, axis=1), y, axis=0)
+            imDiffSq = np.sum((im1[maxOffset:-maxOffset, maxOffset:-maxOffset] - imRoll[maxOffset:-maxOffset, maxOffset:-maxOffset])**2)
             if imDiffSq < minimumDifference:
                 minimumDifference = imDiffSq
                 bestY = y
@@ -108,13 +107,13 @@ def edgeBasedGreen(raw, offset=1):
     out = raw.copy()
     for y in range(1, height-1):
         for x in range(1, width-1):
-            if ((y+x+offset)% 2 == 0):
+            if ((y+x+offset)%2 == 0):
                 verticalDiff = abs(raw[y-1,x] - raw[y+1,x])
                 horizontalDiff = abs(raw[y,x-1] - raw[y,x+1])
                 if verticalDiff > horizontalDiff:
-                    out[y,x] = 0.5 * (raw[y, x-1] + raw[y, x+1])
+                    out[y,x] = 0.5 * (raw[y,x-1] + raw[y,x+1])
                 else:
-                    out[y,x] = 0.5 * (raw[y-1, x] + raw[y+1, x])
+                    out[y,x] = 0.5 * (raw[y-1,x] + raw[y+1,x])
     return out
 
 def edgeBasedGreenDemosaic(raw, offsetGreen=0, offsetRedY=1, offsetRedX=1, offsetBlueY=0, offsetBlueX=0):
@@ -129,12 +128,13 @@ def edgeBasedGreenDemosaic(raw, offsetGreen=0, offsetRedY=1, offsetRedX=1, offse
 
 def greenBasedRorB(raw, green, offsetY, offsetX):
     '''Same as basicRorB but also takes an interpolated green channel and uses this channel to implement the green based technique.'''
-    out = raw.copy()
+    (height, width) = np.shape(raw)
+    out = np.zeros([height, width])
     for y,x in imIter(raw):
-        if ((x+offsetX)%2 ==1 and (y+offsetY)%2==1):
+        if ((x+offsetX)%2==0 and (y+offsetY)%2==0):
             out[y,x] = max(0, raw[y,x] - green[y,x])
-    return basicRorB(out, offsetY, offsetX)
-    
+    return green + basicRorB(out, offsetY, offsetX)
+
 
 def improvedDemosaic(raw, offsetGreen=0, offsetRedY=1, offsetRedX=1, offsetBlueY=0, offsetBlueX=0):
     '''Same as basicDemosaic but uses edgeBasedGreen and greenBasedRorB.'''
@@ -144,13 +144,13 @@ def improvedDemosaic(raw, offsetGreen=0, offsetRedY=1, offsetRedX=1, offsetBlueY
     out[:,:,0] = greenBasedRorB(raw, green, offsetRedY, offsetRedX)
     out[:,:,1] = green
     out[:,:,2] = greenBasedRorB(raw, green, offsetBlueY, offsetBlueX)
-    return out    
+    return out
 
 
 def split(raw):
     '''splits one of Sergei's images into a 3-channel image with height that is floor(height_of_raw/3.0). Returns the 3-channel image.'''
     (height_of_raw, width) = np.shape(raw)
-    height = floor(height_of_raw/3.0)    
+    height = floor(height_of_raw/3.0)
     red = raw[:height]
     green = raw[height:2*height]
     blue = raw[2*height:3*height]
@@ -159,20 +159,26 @@ def split(raw):
     out[:,:,1] = green
     out[:,:,2] = blue
     return out
-    
+
 def sergeiRGB(raw, alignTo=1):
     '''Splits the raw image, then aligns two of the channels to the third. Returns the aligned color image.'''
     rgb = split(raw)
-    (height, width) = np.shape(rgb)
-    r = np.zeros([height, width, 3])
-    g = np.zeros([height, width, 3])
-    b = np.zeros([height, width, 3])
+    (height, width, x) = np.shape(rgb)
+    r = np.zeros([height, width])
+    g = np.zeros([height, width])
+    b = np.zeros([height, width])
     r[:,:] = rgb[:,:,0]
     g[:,:] = rgb[:,:,1]
     b[:,:] = rgb[:,:,2]
-    one = align(b, r)
-    return align(one, g)
-
+    (offsetYG, offsetXG) = align(b, g)
+    rolledG = np.roll(np.roll(g, offsetYG, axis=0), offsetXG, axis=1)
+    (offsetYR, offsetXR) = align(b, r)
+    rolledR = np.roll(np.roll(r, offsetYR, axis=0), offsetXR, axis=1)
+    out = np.zeros((height, width, 3))
+    out[:,:,0] = b
+    out[:,:,1] = rolledG
+    out[:,:,2] = rolledR
+    return out
 
 
 
